@@ -1,0 +1,204 @@
+services:
+
+  # ==================== Infrastructure ====================
+
+  mongodb:
+    image: mongo:7
+    container_name: smart-retail-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - smart-retail-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: smart-retail-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - smart-retail-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== Service Discovery ====================
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: smart-retail-eureka
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - smart-retail-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ==================== API Gateway ====================
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: smart-retail-gateway
+    ports:
+      - "9090:9090"
+    environment:
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER-IP-ADDRESS: "true"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - smart-retail-network
+
+  # ==================== Microservices ====================
+
+  user-service:
+    build: ./user-service
+    container_name: smart-retail-user
+    ports:
+      - "9091:9091"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/smart_retail_users
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER-IP-ADDRESS: "true"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smart-retail-network
+
+  product-service:
+    build: ./product-service
+    container_name: smart-retail-product
+    ports:
+      - "9092:9092"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/smart_retail_products
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER-IP-ADDRESS: "true"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smart-retail-network
+
+  order-service:
+    build: ./order-service
+    container_name: smart-retail-order
+    ports:
+      - "9093:9093"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/smart_retail_orders
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER-IP-ADDRESS: "true"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smart-retail-network
+
+  supplier-restock-service:
+    build: ./supplier-restock-service
+    container_name: smart-retail-supplier
+    ports:
+      - "9094:9094"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/smart_retail_supplier
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER-IP-ADDRESS: "true"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smart-retail-network
+
+  notification-service:
+    build: ./notification-service
+    container_name: smart-retail-notification
+    ports:
+      - "9095:9095"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/smart_retail_notifications
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EUREKA_CLIENT_SERVICE-URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER-IP-ADDRESS: "true"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smart-retail-network
+
+  # ==================== Frontend ====================
+
+  frontend:
+    build: ./frontend
+    container_name: smart-retail-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
+    networks:
+      - smart-retail-network
+
+# ==================== Infrastructure ====================
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  smart-retail-network:
+    driver: bridge

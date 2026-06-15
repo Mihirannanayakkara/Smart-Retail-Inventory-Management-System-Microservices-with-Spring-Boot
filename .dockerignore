@@ -1,0 +1,12 @@
+**/target/
+**/.idea/
+**/*.iml
+**/logs/
+**/docs/
+.git
+.gitignore
+README.md
+start-all.ps1
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
