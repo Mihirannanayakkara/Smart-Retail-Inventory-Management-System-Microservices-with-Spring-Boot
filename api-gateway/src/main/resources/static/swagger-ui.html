@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Retail System - API Gateway</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+        .topbar {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .topbar h1 {
+            color: white;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .topbar .info {
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+        }
+        .topbar .info a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .topbar .info a:hover {
+            text-decoration: underline;
+        }
+        .swagger-ui .info {
+            margin: 20px 0;
+        }
+        .swagger-ui .scheme-container {
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin: 0 0 20px 0;
+        }
+        .swagger-ui .opblock-tag {
+            display: flex;
+            align-items: center;
+        }
+        .swagger-ui .opblock-tag small {
+            padding-left: 10px;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+</head>
+<body>
+    <div class="topbar">
+        <h1>Smart Retail System - Unified API Gateway</h1>
+        <div class="info">
+            <a href="/aggregate/v3/api-docs" target="_blank">OpenAPI Spec (JSON)</a>
+        </div>
+    </div>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            const ui = SwaggerUIBundle({
+                url: "/aggregate/v3/api-docs",
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                validatorUrl: null,
+                tryItOutEnabled: true,
+                filter: true,
+                persistAuthorization: true,
+                displayRequestDuration: true,
+                docExpansion: "list",
+                defaultModelsExpandDepth: 2,
+                defaultModelExpandDepth: 2,
+                syntaxHighlight: {
+                    activate: true,
+                    theme: "agate"
+                },
+                requestInterceptor: (req) => {
+                    return req;
+                },
+                responseInterceptor: (res) => {
+                    return res;
+                }
+            });
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html>

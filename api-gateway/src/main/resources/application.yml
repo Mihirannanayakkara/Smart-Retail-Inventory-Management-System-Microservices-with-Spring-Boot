@@ -1,0 +1,130 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # --- BULLETPROOF CORS CONFIGURATION ---
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: 
+              - "http://localhost:3000"
+              - "http://localhost:3001"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      # --------------------------------------
+      routes:
+        # ── Data routes (unchanged) ───────────────────────────────────
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/gateway/users/**
+          filters:
+            - RewritePath=/gateway/(?<segment>.*), /api/v1/$\{segment}
+
+        - id: product-service
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/gateway/products/**
+          filters:
+            - RewritePath=/gateway/(?<segment>.*), /api/v1/$\{segment}
+
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/gateway/orders/**
+          filters:
+            - RewritePath=/gateway/(?<segment>.*), /api/v1/$\{segment}
+
+        - id: supplier-service
+          uri: lb://SUPPLIER-RESTOCK-SERVICE
+          predicates:
+            - Path=/gateway/suppliers/**
+          filters:
+            - RewritePath=/gateway/(?<segment>.*), /api/v1/$\{segment}
+
+        - id: restock-service
+          uri: lb://SUPPLIER-RESTOCK-SERVICE
+          predicates:
+            - Path=/gateway/restocks/**
+          filters:
+            - RewritePath=/gateway/(?<segment>.*), /api/v1/$\{segment}
+
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/gateway/notifications/**
+          filters:
+            - RewritePath=/gateway/(?<segment>.*), /api/v1/$\{segment}
+
+        # ── Swagger doc proxy routes ──────────────────────────────────
+        - id: user-service-docs
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/aggregate/user/v3/api-docs
+          filters:
+            - SetPath=/api-docs
+
+        - id: product-service-docs
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/aggregate/product/v3/api-docs
+          filters:
+            - SetPath=/api-docs
+
+        - id: order-service-docs
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/aggregate/order/v3/api-docs
+          filters:
+            - SetPath=/api-docs
+
+        - id: supplier-service-docs
+          uri: lb://SUPPLIER-RESTOCK-SERVICE
+          predicates:
+            - Path=/aggregate/supplier/v3/api-docs
+          filters:
+            - SetPath=/api-docs
+
+        - id: restock-service-docs
+          uri: lb://SUPPLIER-RESTOCK-SERVICE
+          predicates:
+            - Path=/aggregate/restock/v3/api-docs
+          filters:
+            - SetPath=/api-docs
+
+        - id: notification-service-docs
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/aggregate/notification/v3/api-docs
+          filters:
+            - SetPath=/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# ── Disable Springdoc Auto-Configuration ──────────────────────────────
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
